@@ -1,0 +1,9 @@
+data/
+__pycache__/
+*.pyc
+.DS_Store
+.venv/
+env/
+venv/
+*.tar.bz2
+results/report.html
