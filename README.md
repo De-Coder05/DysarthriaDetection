@@ -24,6 +24,26 @@ The model was evaluated using speaker-independent validation (no overlap of spea
 - **Back-end**: 2-layer Bidirectional LSTM (BiLSTM) for temporal modeling.
 - **Output**: Softmax classifier for Normal vs. Dysarthric detection.
 
+## 🎯 Quick Start (Inference)
+The repository includes a pre-trained model (`models/best_model.pth`), so you can run predictions immediately without downloading the dataset or training!
+
+**1. Clone the repository and install requirements**
+```bash
+git clone https://github.com/De-Coder05/DysarthriaDetection.git
+cd DysarthriaDetection
+pip install -r requirements.txt
+```
+
+**2. Run inference on your own audio file**
+```bash
+python inference.py path/to/your/audio_file.wav
+```
+
+*(Optional)* Adjust the sensitivity threshold (default is 0.70). Lowering it makes the model more sensitive to detecting dysarthria:
+```bash
+python inference.py path/to/your/audio_file.wav --threshold 0.50
+```
+
 ## 🛠️ Setup & Usage
 
 ### 1. Requirements
