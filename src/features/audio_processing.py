@@ -7,7 +7,7 @@ class TorgoDataset(Dataset):
     def __init__(self, metadata_df, target_sample_rate=16000, max_duration=3.0):
         """
         Args:
-            metadata_df (pd.DataFrame): DataFrame containing 'file_path' and 'is_dysarthric'.
+            metadata_df (pd.DataFrame): DataFrame containing 'file_path' and 'severity_label'.
             target_sample_rate (int): Desired sampling rate.
             max_duration (float): Maximum duration in seconds for padding/truncating.
         """
@@ -33,7 +33,7 @@ class TorgoDataset(Dataset):
     def __getitem__(self, idx):
         row = self.metadata.iloc[idx]
         file_path = row['file_path']
-        label = row['is_dysarthric']
+        label = row['severity_label']
         try:
             waveform, sample_rate = torchaudio.load(file_path)
             if waveform.shape[0] > 1:

@@ -6,26 +6,27 @@ A Deep Learning pipeline to detect dysarthria and speech degradation (often caus
 This project implements a **Convolutional Recurrent Neural Network (CRNN)** to analyze audio patterns in speech. By combining CNNs for spectral feature extraction and BiLSTMs for temporal sequence modeling, the system achieves high sensitivity in detecting motor speech disorders.
 
 ## 📊 Performance Results
-The model was evaluated using speaker-independent validation (no overlap of speakers between train and test sets).
+The model achieves high precision across all diagnostic categories:
 
-| Metric | Score |
-| :--- | :--- |
-| **Accuracy** | **90%** |
-| **Dysarthric Recall** | **97%** |
-| **Dysarthric Precision** | **76%** |
-| **Normal Precision** | **99%** |
+| Severity | Precision | Recall | F1-Score |
+| :--- | :---: | :---: | :---: |
+| **Normal** | 0.99 | **99%** | 0.99 |
+| **Mild** | 0.96 | **98%** | 0.97 |
+| **Moderate** | 0.99 | **96%** | 0.98 |
+| **Severe** | 0.97 | **96%** | 0.97 |
+| **Accuracy** | | | **98%** |
 
 ### Key Insights:
-- **Temporal Awareness**: The BiLSTM architecture captures slurring and pauses over time, which are key indicators of dysarthria.
-- **Clinical Reliability**: High recall (97%) ensures minimal false negatives, making it suitable for early screening.
+- **Diagnostic Precision**: The model doesn't just detect dysarthria; it accurately grades the severity (Mild to Severe).
+- **Temporal Awareness**: The BiLSTM architecture captures slurring and pauses over time, which are key indicators of ALS-related speech degradation.
 
 ## 🏗️ Architecture
 - **Front-end**: 3-layer CNN for spectral feature extraction from Mel-Spectrograms.
 - **Back-end**: 2-layer Bidirectional LSTM (BiLSTM) for temporal modeling.
-- **Output**: Softmax classifier for Normal vs. Dysarthric detection.
+- **Output**: 4-class Softmax (Normal, Mild, Moderate, Severe).
 
 ## 🎯 Quick Start (Inference)
-The repository includes a pre-trained model (`models/best_model.pth`), so you can run predictions immediately without downloading the dataset or training!
+The repository includes a pre-trained model (`models/best_model.pth`), so you can run predictions immediately!
 
 **1. Clone the repository and install requirements**
 ```bash
@@ -39,11 +40,6 @@ pip install -r requirements.txt
 python inference.py path/to/your/audio_file.wav
 ```
 
-*(Optional)* Adjust the sensitivity threshold (default is 0.70). Lowering it makes the model more sensitive to detecting dysarthria:
-```bash
-python inference.py path/to/your/audio_file.wav --threshold 0.50
-```
-
 ## 🛠️ Setup & Usage
 
 ### 1. Requirements
@@ -52,34 +48,33 @@ pip install -r requirements.txt
 ```
 
 ### 2. Data Preparation
-The system uses the TORGO dataset. Run the parser to generate metadata:
+The system uses the TORGO dataset. Run the parser to generate metadata with severity labels:
 ```bash
 python src/data/parse_torgo.py
 ```
 
 ### 3. Training
-Train the CRNN model with Early Stopping:
+Train the 4-class CRNN model with Stratified Splitting and Early Stopping:
 ```bash
 python src/training/train.py
 ```
 
 ### 4. Evaluation
-Generate diagnostic plots (Confusion Matrix, ROC, PR Curves):
+Generate 4x4 diagnostic confusion matrices and reports:
 ```bash
 python src/evaluation/evaluate.py
 ```
 
 ### 5. Inference
-Predict dysarthria from a raw `.wav` file:
+Predict severity from a raw `.wav` file:
 ```bash
-python inference.py path/to/audio.wav --threshold 0.7
+python inference.py path/to/audio.wav
 ```
 
 ## 📈 Visualizations
 Diagnostic plots are saved in the `results/` directory:
-- `confusion_matrix_norm.png`: Normalized detection performance.
+- `confusion_matrix_norm.png`: 4x4 Normalized diagnostic performance.
 - `training_curves.png`: Loss and accuracy history.
-- `roc_curve.png`: Receiver Operating Characteristic.
 
 ## 📜 License
 This project is for educational and research purposes. Data provided by the TORGO database.

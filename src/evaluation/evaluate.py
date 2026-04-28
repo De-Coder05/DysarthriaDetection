@@ -43,34 +43,40 @@ def evaluate_model():
     plot_training_history()
     _, val_loader = get_dataloaders(metadata_path, batch_size=32)
     device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
-    model = DysarthriaCRNN(num_classes=2).to(device)
+    model = DysarthriaCRNN(num_classes=4).to(device)
+    
     model_path = "models/best_model.pth"
     if not os.path.exists(model_path):
         print("Model weights not found! Train the model first.")
         return
+        
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
+    
     all_preds = []
     all_targets = []
-    all_probs = []
+    
     print("Evaluating...")
     with torch.no_grad():
         for inputs, targets in val_loader:
             inputs = inputs.to(device)
             if len(inputs.shape) == 3:
                 inputs = inputs.unsqueeze(1)
+                
             outputs = model(inputs)
-            probs = torch.nn.functional.softmax(outputs, dim=1)
             _, predicted = outputs.max(1)
+            
             all_preds.extend(predicted.cpu().numpy())
             all_targets.extend(targets.numpy())
-            all_probs.extend(probs[:, 1].cpu().numpy())
-    target_names = ['Normal', 'Dysarthric']
+            
+    target_names = ['Normal', 'Mild', 'Moderate', 'Severe']
     print("\nClassification Report:")
     print(classification_report(all_targets, all_preds, target_names=target_names))
+    
+    # Confusion Matrix (Raw)
     cm = confusion_matrix(all_targets, all_preds)
     plt.figure(figsize=(10, 8))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='viridis',
+    sns.heatmap(cm, annot=True, fmt='d', cmap='viridis', 
                 xticklabels=target_names, yticklabels=target_names,
                 annot_kws={"size": 14})
     plt.ylabel('Actual Label', fontsize=12)
@@ -78,9 +84,11 @@ def evaluate_model():
     plt.title('Confusion Matrix (Total Counts)', fontsize=14)
     plt.savefig("results/confusion_matrix.png")
     print("Saved raw confusion matrix to results/confusion_matrix.png")
+    
+    # Confusion Matrix (Normalized)
     cm_norm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
     plt.figure(figsize=(10, 8))
-    sns.heatmap(cm_norm, annot=True, fmt='.2%', cmap='viridis',
+    sns.heatmap(cm_norm, annot=True, fmt='.2%', cmap='viridis', 
                 xticklabels=target_names, yticklabels=target_names,
                 annot_kws={"size": 14})
     plt.ylabel('Actual Label', fontsize=12)
@@ -88,26 +96,5 @@ def evaluate_model():
     plt.title('Normalized Confusion Matrix', fontsize=14)
     plt.savefig("results/confusion_matrix_norm.png")
     print("Saved normalized confusion matrix to results/confusion_matrix_norm.png")
-    fpr, tpr, _ = roc_curve(all_targets, all_probs)
-    roc_auc = auc(fpr, tpr)
-    plt.figure(figsize=(8, 6))
-    plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (area = {roc_auc:.2f})')
-    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Receiver Operating Characteristic (ROC)')
-    plt.legend(loc="lower right")
-    plt.savefig("results/roc_curve.png")
-    print("Saved ROC curve to results/roc_curve.png")
-    precision, recall, _ = precision_recall_curve(all_targets, all_probs)
-    plt.figure(figsize=(8, 6))
-    plt.plot(recall, precision, color='blue', lw=2)
-    plt.xlabel('Recall')
-    plt.ylabel('Precision')
-    plt.title('Precision-Recall Curve')
-    plt.savefig("results/precision_recall_curve.png")
-    print("Saved PR curve to results/precision_recall_curve.png")
 if __name__ == "__main__":
     evaluate_model()
