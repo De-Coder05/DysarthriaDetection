@@ -44,39 +44,38 @@ def evaluate_model():
     _, val_loader = get_dataloaders(metadata_path, batch_size=32)
     device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
     model = DysarthriaCRNN(num_classes=4).to(device)
-    
+
     model_path = "models/best_model.pth"
     if not os.path.exists(model_path):
         print("Model weights not found! Train the model first.")
         return
-        
+
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
-    
+
     all_preds = []
     all_targets = []
-    
+
     print("Evaluating...")
     with torch.no_grad():
         for inputs, targets in val_loader:
             inputs = inputs.to(device)
             if len(inputs.shape) == 3:
                 inputs = inputs.unsqueeze(1)
-                
+
             outputs = model(inputs)
             _, predicted = outputs.max(1)
-            
+
             all_preds.extend(predicted.cpu().numpy())
             all_targets.extend(targets.numpy())
-            
+
     target_names = ['Normal', 'Mild', 'Moderate', 'Severe']
     print("\nClassification Report:")
     print(classification_report(all_targets, all_preds, target_names=target_names))
-    
-    # Confusion Matrix (Raw)
+
     cm = confusion_matrix(all_targets, all_preds)
     plt.figure(figsize=(10, 8))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='viridis', 
+    sns.heatmap(cm, annot=True, fmt='d', cmap='viridis',
                 xticklabels=target_names, yticklabels=target_names,
                 annot_kws={"size": 14})
     plt.ylabel('Actual Label', fontsize=12)
@@ -84,11 +83,10 @@ def evaluate_model():
     plt.title('Confusion Matrix (Total Counts)', fontsize=14)
     plt.savefig("results/confusion_matrix.png")
     print("Saved raw confusion matrix to results/confusion_matrix.png")
-    
-    # Confusion Matrix (Normalized)
+
     cm_norm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
     plt.figure(figsize=(10, 8))
-    sns.heatmap(cm_norm, annot=True, fmt='.2%', cmap='viridis', 
+    sns.heatmap(cm_norm, annot=True, fmt='.2%', cmap='viridis',
                 xticklabels=target_names, yticklabels=target_names,
                 annot_kws={"size": 14})
     plt.ylabel('Actual Label', fontsize=12)

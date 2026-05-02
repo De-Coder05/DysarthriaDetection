@@ -11,21 +11,19 @@ from src.features.audio_processing import TorgoDataset
 from src.models.baseline import DysarthriaCRNN
 def get_dataloaders(metadata_path, batch_size=32):
     df = pd.read_csv(metadata_path)
-    
-    # Using stratified split at the sample level to ensure every class (especially Severe) 
-    # is represented in both training and validation sets. 
+
     from sklearn.model_selection import train_test_split
-    
+
     train_df, val_df = train_test_split(
-        df, 
-        test_size=0.2, 
-        random_state=42, 
+        df,
+        test_size=0.2,
+        random_state=42,
         stratify=df['severity_label']
     )
-    
+
     train_df = train_df.reset_index(drop=True)
     val_df = val_df.reset_index(drop=True)
-    
+
     print(f"Train samples: {len(train_df)}, Validation samples: {len(val_df)}")
     print("Validation Class Distribution:")
     print(val_df['severity_label'].value_counts().sort_index())
@@ -42,14 +40,13 @@ def train_model(epochs=20, batch_size=32, lr=0.001, patience=3):
     train_loader, val_loader = get_dataloaders(metadata_path, batch_size)
     device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
     print(f"Using device: {device}")
-    
-    # Calculate class weights to handle imbalance
+
     df = pd.read_csv(metadata_path)
     class_counts = df['severity_label'].value_counts().sort_index().values
     weights = 1.0 / torch.tensor(class_counts, dtype=torch.float32)
-    weights = weights / weights.sum() * 4.0 # Normalize
+    weights = weights / weights.sum() * 4.0
     weights = weights.to(device)
-    
+
     model = DysarthriaCRNN(num_classes=4).to(device)
     criterion = nn.CrossEntropyLoss(weight=weights)
     optimizer = optim.Adam(model.parameters(), lr=lr)

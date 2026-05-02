@@ -5,12 +5,6 @@ import pandas as pd
 import os
 class TorgoDataset(Dataset):
     def __init__(self, metadata_df, target_sample_rate=16000, max_duration=3.0):
-        """
-        Args:
-            metadata_df (pd.DataFrame): DataFrame containing 'file_path' and 'severity_label'.
-            target_sample_rate (int): Desired sampling rate.
-            max_duration (float): Maximum duration in seconds for padding/truncating.
-        """
         self.metadata = metadata_df
         self.target_sample_rate = target_sample_rate
         self.max_length = int(target_sample_rate * max_duration)
